@@ -117,40 +117,27 @@
     display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
   }
 
-
   @media (max-width: 640px){
-  .meta-row{
-    display:flex;           /* เดิมเป็น flex อยู่แล้ว แต่ย้ำให้แน่ใจ */
-    flex-direction:column;  /* เรียงเป็นคอลัมน์บนมือถือ */
-    align-items:stretch;
-    gap:.5rem;
+    .meta-row{ display:flex; flex-direction:column; align-items:stretch; gap:.5rem; }
+    .meta-row .actions{ display:flex; flex-direction:column; align-items:stretch; gap:.5rem; width:100%; }
+    .meta-row .actions .btn-lite{ align-self:flex-start; }
+    .meta-row .actions .btn-mobile-full{ width:100%; }
   }
-  .meta-row .actions{
-    display:flex;
-    flex-direction:column;  /* ปุ่มเรียงลง */
-    align-items:stretch;
-    gap:.5rem;
-    width:100%;
-  }
-  .meta-row .actions .btn-lite{
-    align-self:flex-start;  /* ปุ่ม "อ่านเพิ่มเติม" ชิดซ้าย อ่านง่าย */
-  }
-  .meta-row .actions .btn-mobile-full{
-    width:100%;             /* "ไปที่ดิส" เต็มความกว้าง */
-  }
-}
 
-
-
+  /* === Read-more expand animation (โหดๆ) === */
+  .expand-animating{ overflow:hidden; will-change:height, opacity; }
+  .card.burst{ animation:burstGlow 520ms ease-out; }
+  @keyframes burstGlow{
+    0%{ box-shadow:0 0 0 rgba(167,139,250,0); }
+    35%{ box-shadow:0 18px 72px rgba(167,139,250,.55); }
+    100%{ box-shadow:0 10px 40px rgba(124,58,237,.35); }
+  }
 </style>
 </head>
 <body>
   <main class="max-w-5xl mx-auto p-5 md:p-8">
     <header class="mb-6">
-      <h1 class="heading-gradient text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05]">
-  Purple Shop
-</h1>
-
+      <h1 class="heading-gradient text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05]">Purple Shop</h1>
       <p class="muted mt-1">สามารถโพสต์และหาโรลกันได้เลย</p>
     </header>
 
@@ -181,8 +168,7 @@
         <!-- Discord link -->
         <div>
           <label for="discord" class="block text-sm mb-2">ลิงก์ดิสคอร์ด <span class="text-pink-400">*</span></label>
-          <input id="discord" class="inp" type="url" maxlength="200"
-                 placeholder="https://discord.gg/xxxxxx" required>
+          <input id="discord" class="inp" type="url" maxlength="200" placeholder="https://discord.gg/xxxxxx" required>
           <p class="mt-1 text-xs muted">ใช้สร้างปุ่ม “ไปที่ดิส” ในหน้าค้นหา</p>
         </div>
 
@@ -314,6 +300,7 @@
       }else{
         tabSearchBtn.classList.add("active"); tabCreateBtn.classList.remove("active");
         tabSearch.classList.remove("hidden");  tabCreate.classList.add("hidden");
+        runSearch(); // 🔄 เข้าแท็บหาข้อมูลแล้วค้นหาให้อัตโนมัติ
       }
       updateIndicator();
     }
@@ -489,10 +476,26 @@
       sgOther?.addEventListener("change", ()=>{
         $("#searchOtherWrap").classList.toggle("hidden", !sgOther.checked);
         if(!sgOther.checked) $("#searchOtherTxt").value = "";
+        runSearch(); // 🔄 เปลี่ยนสถานะ "อื่นๆ" ให้ค้นหาใหม่
       });
       searchGenres.querySelectorAll(".chip > span").forEach(attachRipple);
+
+      // 🔄 เปลี่ยนชิปแล้วค้นหาใหม่ทันที
+      searchGenres.addEventListener("change", ()=> runSearch());
     }
     renderSearchChips();
+
+    // 🔄 เปลี่ยนประเภทแล้วค้นหาใหม่
+    document.querySelectorAll('input[name="stype"]').forEach(el=>{
+      el.addEventListener('change', ()=> runSearch());
+    });
+
+    // 🔄 พิมพ์แนว "อื่นๆ" แล้วค้นหา (หน่วงเล็กน้อย)
+    let otherDebounce;
+    $("#searchOtherTxt")?.addEventListener('input', ()=>{
+      clearTimeout(otherDebounce);
+      otherDebounce = setTimeout(()=> runSearch(), 350);
+    });
 
     function getSearchType(){
       const r = document.querySelector('input[name="stype"]:checked');
@@ -592,7 +595,6 @@
         const discord = typeof v.discord === "string" ? v.discord : "";
         const hasDiscord = !!discord && /^https?:\/\//i.test(discord);
 
-        // info: โชว์ 3 บรรทัด + ปุ่มอ่านเพิ่ม (รองรับ \n)
         card.innerHTML = `
   <div class="flex items-center justify-between gap-3">
     <h3 class="text-lg font-semibold">${escapeHTML(v.name||"-")}</h3>
@@ -605,9 +607,7 @@
   <div class="mt-3">
     <p class="info text-sm leading-relaxed text-clamp-3">${nl2brSafe(v.info||"")}</p>
 
-    <!-- บรรทัดล่างนี้เปลี่ยนใหม่ให้รองรับมือถือ -->
     <div class="mt-3 meta-row flex items-center justify-between gap-3">
-      <!-- actions: ใส่ "อ่านเพิ่มเติม" ก่อน แล้วตามด้วย "ไปที่ดิส" (มือถือจะเรียงลงและปุ่มดิสเต็มแถว) -->
       <div class="actions flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto">
         <button type="button" class="btn-lite read-more"><span>อ่านเพิ่มเติม</span></button>
         ${hasDiscord ? `
@@ -620,7 +620,6 @@
           </a>` : ``}
       </div>
 
-      <!-- meta (วันที่) ยังอยู่ แต่บนมือถือจะลงไปบรรทัดถัดไปเอง -->
       <div class="text-xs muted">
         บันทึกเมื่อ: ${escapeHTML(dateText)} • หมดรับ: ${escapeHTML(expText)}
       </div>
@@ -656,7 +655,7 @@
       if(!btn) return;
       const card = btn.closest(".card");
       const p = card.querySelector(".info");
-      const span = btn.querySelector("span");   
+      const span = btn.querySelector("span");
       if(!p || !span) return;
       if(p.classList.contains("text-clamp-3")){
         p.classList.remove("text-clamp-3");
@@ -670,6 +669,7 @@
 
     function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
 
+    // ปุ่มค้นหา/ล้างยังใช้งานได้ตามเดิม
     $("#searchBtn").addEventListener("click", runSearch);
     $("#clearBtn").addEventListener("click", ()=>{
       setBtnLoading(clearBtn, true, "กำลังล้าง…");
@@ -677,12 +677,14 @@
       $("#searchOtherTxt").value=""; $("#searchOtherWrap").classList.add("hidden");
       document.querySelector("input[name='stype'][value='ทั้งหมด']").checked = true;
       resultList.innerHTML=""; resultCount.textContent=""; skeletonWrap.classList.add("hidden"); skeletonWrap.innerHTML="";
-      setTimeout(()=> setBtnLoading(clearBtn, false), 350);
+      setTimeout(()=> { setBtnLoading(clearBtn, false); runSearch(); }, 350); // 🔄 ล้างแล้วค้นหาใหม่อัตโนมัติ
     });
 
     // เริ่มต้น
     (async()=>{
       await cleanupExpired();
+      // พรีเฟทช์ผลค้นหาไว้ก่อน (แสดงทั้งหมด)
+      runSearch(); // 🔄 โหลดรายการทั้งหมดตั้งแต่เริ่ม
       activateTab("create");
       updateIndicator();
     })();
