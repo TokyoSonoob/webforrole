@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Purple Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { color-scheme: dark }
+  html,body { height:100% }
+  body{
+    font-family:'Prompt',system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Arial;
+    background: radial-gradient(1400px 900px at 10% -10%, #2b0f44 0%, transparent 60%),
+                radial-gradient(1200px 800px at 110% 10%, #1c0b2b 0%, transparent 60%),
+                linear-gradient(180deg,#09010f 0%, #0b0613 50%, #0e0718 100%);
+    color:#e5e7eb;
+  }
+  .muted{ color:#9ca3af }
+  .card{ background:#0f0a17; border:1px solid #1f1440; border-radius:16px; padding:16px }
+
+  /* ===== Title ไล่สี ม่วง→ขาว (คำตอบ: class .heading-gradient) ===== */
+  .heading-gradient{
+    background: linear-gradient(90deg,#4b28b4 0%, #ffffff 50%, #4b28b4 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: sheen 1.7s linear infinite;
+    letter-spacing:-.01em;
+  }
+  @keyframes sheen{ 0%{background-position:0% 0} 100%{background-position:200% 0} }
+
+  .inp{
+    width:100%; background:#06040a; border:1px solid #3a1c6b; color:#fff;
+    border-radius:12px; padding:12px 16px; outline:none; transition:.2s border,.2s box-shadow;
+  }
+  .inp:focus{ border-color:#a78bfa; box-shadow:0 0 0 3px rgba(167,139,250,.25) }
+
+  /* Tabs */
+  .tabs{ position:relative }
+  .tab-btn{ border-bottom:2px solid transparent; padding:.5rem .25rem .75rem; font-weight:700 }
+  .tab-btn.active{ color:#c084fc; border-color:#a78bfa }
+  .tab-indicator{
+    position:absolute; bottom:-1px; height:2px; background:#a78bfa; border-radius:2px;
+    transition:transform .35s ease, width .35s ease; will-change:transform,width;
+  }
+
+  /* ปุ่มหลัก */
+  .btn{
+    position:relative; overflow:hidden; border-radius:14px; padding:12px 20px;
+    display:inline-flex; align-items:center; gap:.6rem;
+    font-weight:700; color:#fff; background:linear-gradient(135deg,#7c3aed,#4f46e5);
+    box-shadow:0 10px 40px rgba(124,58,237,.35); transition:transform .15s ease, box-shadow .25s ease, opacity .2s;
+  }
+  .btn.full{ width:100% }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 16px 52px rgba(124,58,237,.45) }
+  .btn:active{ transform:translateY(0) scale(.98) }
+  .btn:disabled{ opacity:.6; cursor:not-allowed }
+  .btn .label{ display:inline-flex; align-items:center; gap:.5rem }
+  .btn .spinner{
+    width:18px; height:18px; border-radius:50%;
+    border:3px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin 1s linear infinite; display:none;
+  }
+  .btn[data-state="loading"] .spinner{ display:inline-block }
+  .btn[data-state="loading"] .labelText{ opacity:.7 }
+  .btn[data-state="loading"]{ animation:pulseGlow 1s ease-in-out infinite }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+  @keyframes pulseGlow{ 0%,100%{ box-shadow:0 10px 40px rgba(124,58,237,.35) } 50%{ box-shadow:0 14px 60px rgba(167,139,250,.55) } }
+
+  /* ปุ่มเล็กใช้กับ "อ่านเพิ่มเติม" */
+  .btn-lite{
+    position:relative; overflow:hidden; border-radius:999px; padding:.35rem .8rem;
+    display:inline-flex; align-items:center; gap:.4rem; font-weight:700; color:#e9d5ff;
+    background:linear-gradient(135deg,#1a0f2a,#140b22); border:1px solid #5b21b6;
+    box-shadow:0 6px 18px rgba(124,58,237,.22); transition:transform .12s, box-shadow .2s, background .2s, color .2s;
+  }
+  .btn-lite:hover{ background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff; box-shadow:0 10px 32px rgba(124,58,237,.45) }
+  .btn-lite:active{ transform:translateY(0) scale(.98) }
+
+  /* ชิป */
+  .chip{ position:relative; display:inline-flex; align-items:center; border-radius:999px; cursor:pointer; user-select:none }
+  .chip input{ position:absolute; opacity:0 }
+  .chip > span{
+    display:inline-flex; align-items:center; gap:.5rem; padding:.55rem 1rem; font-weight:600;
+    border-radius:999px; border:1px solid #5b21b6; color:#e9d5ff; background:linear-gradient(135deg,#1a0f2a,#140b22);
+    transition:transform .12s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease, opacity .2s;
+    box-shadow:0 6px 18px rgba(124,58,237,.22);
+  }
+  .chip:active > span{ transform:translateY(1px) scale(.98) }
+  .chip input:checked + span{
+    background:linear-gradient(135deg,#7c3aed,#4f46e5);
+    border-color:#8b5cf6; color:#fff;
+    box-shadow:0 10px 32px rgba(124,58,237,.45), inset 0 0 10px rgba(167,139,250,.28);
+  }
+
+  /* Ripple */
+  .ripple{ position:absolute; border-radius:50%; transform:scale(0); opacity:.55;
+    background:radial-gradient(circle, rgba(255,255,255,.35) 0%, rgba(255,255,255,.15) 40%, transparent 60%);
+    animation:ripple .6s ease-out forwards; pointer-events:none;
+  }
+  @keyframes ripple{ to{ transform:scale(6); opacity:0 } }
+
+  /* Skeleton / fade */
+  .skeleton{ position:relative; overflow:hidden; border-radius:16px; background:#0a0712; border:1px solid #1f1440; height:132px }
+  .skeleton::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(167,139,250,.10), transparent); animation:shimmer 1.2s infinite; }
+  @keyframes shimmer{ 0%{ transform:translateX(-100%) } 100%{ transform:translateX(100%) } }
+  .fade-up{ opacity:0; transform:translateY(10px); animation:fadeUp .35s ease forwards }
+  @keyframes fadeUp{ to{ opacity:1; transform:none } }
+
+  .toast{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(20px); background:#0b0613; border:1px solid #512c9b; color:#e9d5ff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 40px rgba(124,58,237,.4); opacity:0; pointer-events:none; }
+  .toast.show{ animation:toastIn .3s ease forwards }
+  @keyframes toastIn{ to{ opacity:1; transform:translateX(-50%) translateY(0) } }
+
+  @keyframes shake{ 10%,90%{transform:translateX(-1px)} 20%,80%{transform:translateX(2px)} 30%,50%,70%{transform:translateX(-4px)} 40%,60%{transform:translateX(4px)} }
+  .shake{ animation:shake .5s both }
+
+  /* Clamp 3 บรรทัด */
+  .text-clamp-3{
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+
+  /* มือถือ: ขยายระยะหายใจและขนาดปุ่ม */
+  @media (max-width:640px){
+    .card{ padding:14px; border-radius:14px }
+    .inp{ padding:14px 16px; font-size:1rem }
+    .btn{ padding:14px 22px; font-size:1.05rem }
+    .btn .spinner{ width:20px; height:20px; border-width:3px }
+    .btn-lite{ padding:.45rem 1rem; font-size:.95rem }
+    .chip > span{ padding:.7rem 1.1rem; font-size:.95rem }
+  }
+</style>
+</head>
+<body>
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
+    <header class="mb-6 md:mb-8">
+      <h1 class="heading-gradient text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05]">
+        Purple Shop
+      </h1>
+      <p class="muted mt-2 text-base sm:text-lg">สามารถโพสต์และหาโรลกันได้เลย</p>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs flex gap-4 border-b border-purple-950/60 mb-6 md:mb-8">
+      <button id="tabCreateBtn" type="button" class="tab-btn active">กรอก</button>
+      <button id="tabSearchBtn" type="button" class="tab-btn">หาข้อมูล</button>
+      <div id="tabIndicator" class="tab-indicator" style="width:0"></div>
+    </nav>
+
+    <!-- Create -->
+    <section id="tabCreate" class="grid gap-5">
+      <form id="createForm" class="card grid gap-5" autocomplete="off">
+        <div>
+          <label class="block text-sm mb-2">ประเภท <span class="text-pink-400">*</span></label>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip"><input type="radio" name="type" value="หาลูกโรล" required><span>หาลูกโรล</span></label>
+            <label class="chip"><input type="radio" name="type" value="หาแอดมิน" required><span>หาแอดมิน</span></label>
+          </div>
+        </div>
+
+        <div>
+          <label for="name" class="block text-sm mb-2">ชื่อโรล <span class="text-pink-400">*</span></label>
+          <input id="name" class="inp" type="text" maxlength="80" placeholder="เช่น ห้องโรลธีมโรงเรียน" required>
+          <p class="mt-1 text-xs muted">ไม่เกิน 80 ตัวอักษร</p>
+        </div>
+
+        <!-- Discord link -->
+        <div>
+          <label for="discord" class="block text-sm mb-2">ลิงก์ดิสคอร์ด <span class="text-pink-400">*</span></label>
+          <input id="discord" class="inp" type="url" maxlength="200"
+                 placeholder="https://discord.gg/xxxxxx หรือ https://discord.com/invite/xxxxxx" required>
+          <p class="mt-1 text-xs muted">ใช้สร้างปุ่ม “ไปที่ดิส” ในหน้าค้นหา</p>
+        </div>
+
+        <!-- Expire date -->
+        <div>
+          <label for="expDate" class="block text-sm mb-2">วันปิดรับ <span class="text-pink-400">*</span></label>
+          <input id="expDate" class="inp" type="date" required>
+          <p class="mt-1 text-xs muted">ถึงวันดังกล่าวแล้ว ระบบจะลบประกาศออกอัตโนมัติ</p>
+        </div>
+
+        <div>
+          <label class="block text-sm mb-2">แนวโรล (เลือกได้หลายอัน) <span class="text-pink-400">*</span></label>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip"><input type="checkbox" name="genres" value="โรงเรียน"><span>โรงเรียน</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="คุก"><span>คุก</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="แฟนตาซี"><span>แฟนตาซี</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="นักสืบ"><span>นักสืบ</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="ยุคปัจจุบัน"><span>ยุคปัจจุบัน</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="ยุคกลาง"><span>ยุคกลาง</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="ซอมบี้"><span>ซอมบี้</span></label>
+            <label class="chip"><input id="otherChk" type="checkbox" name="genres" value="อื่นๆ"><span>อื่นๆ</span></label>
+          </div>
+          <div id="otherWrap" class="mt-3 hidden">
+            <input id="otherTxt" type="text" maxlength="40" placeholder="ระบุแนวอื่น ๆ" class="inp">
+          </div>
+        </div>
+
+        <div>
+          <label for="info" class="block text-sm mb-2">กรอกข้อมูล <span class="text-pink-400">*</span></label>
+          <textarea id="info" class="inp min-h-[160px]" maxlength="3000" placeholder="พิมพ์ได้หลายบรรทัด ใช้ Enter เพื่อขึ้นบรรทัดใหม่" required></textarea>
+          <p class="mt-1 text-xs muted"><span id="infoCount">0</span>/3000</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="submitBtn" type="submit" class="btn full">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="label"><span class="labelText">โพสต์</span></span>
+          </button>
+          <span id="submitMsg" class="text-sm"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Search -->
+    <section id="tabSearch" class="hidden grid gap-5">
+      <div id="searchControls" class="card grid gap-5">
+        <div>
+          <label class="block text-sm mb-2">ค้นหาตามประเภท</label>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip"><input type="radio" name="stype" value="ทั้งหมด" checked><span>ทั้งหมด</span></label>
+            <label class="chip"><input type="radio" name="stype" value="หาลูกโรล"><span>หาลูกโรล</span></label>
+            <label class="chip"><input type="radio" name="stype" value="หาแอดมิน"><span>หาแอดมิน</span></label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm mb-2">กรองตามแนวโรล (เลือกได้หลายอัน • ตรงแค่บางอันก็ขึ้น)</label>
+          <div id="searchGenres" class="flex flex-wrap gap-2"></div>
+          <div id="searchOtherWrap" class="mt-3 hidden">
+            <input id="searchOtherTxt" type="text" maxlength="40" placeholder="แนวอื่น ๆ" class="inp">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="searchBtn" type="button" class="btn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="label"><span class="labelText">ค้นหา</span></span>
+          </button>
+          <button id="clearBtn" type="button" class="btn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="label"><span class="labelText">ล้างตัวกรอง</span></span>
+          </button>
+          <span id="resultCount" class="text-sm muted"></span>
+        </div>
+      </div>
+
+      <div id="skeletonWrap" class="grid gap-4 hidden"></div>
+      <div id="resultList" class="grid gap-4"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    /* ===== Firebase ===== */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, where, getDocs, limit, Timestamp, doc, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDm5l5gPl5CxAIpGq7nUBp2ikj7-g3_tH4",
+      authDomain: "ticket-423dd.firebaseapp.com",
+      projectId: "ticket-423dd",
+      storageBucket: "ticket-423dd.firebasestorage.app",
+      messagingSenderId: "52724074155",
+      appId: "1:52724074155:web:75f96a9b5d541dfca219ee",
+      measurementId: "G-HXML7YNGNX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const col = collection(db, "role_posts");
+
+    const $  = (q)=>document.querySelector(q);
+    const $$ = (q)=>Array.from(document.querySelectorAll(q));
+
+    /* ===== Tabs ===== */
+    const tabCreateBtn = $("#tabCreateBtn");
+    const tabSearchBtn = $("#tabSearchBtn");
+    const tabCreate    = $("#tabCreate");
+    const tabSearch    = $("#tabSearch");
+    const indicator    = $("#tabIndicator");
+    const tabsWrap     = document.querySelector(".tabs");
+
+    function updateIndicator(){
+      const active = document.querySelector(".tab-btn.active");
+      const nb = active.getBoundingClientRect();
+      const wb = tabsWrap.getBoundingClientRect();
+      const left = nb.left - wb.left;
+      indicator.style.width = nb.width + "px";
+      indicator.style.transform = `translateX(${left}px)`;
+    }
+    function activateTab(which){
+      if(which==="create"){
+        tabCreateBtn.classList.add("active"); tabSearchBtn.classList.remove("active");
+        tabCreate.classList.remove("hidden");  tabSearch.classList.add("hidden");
+      }else{
+        tabSearchBtn.classList.add("active"); tabCreateBtn.classList.remove("active");
+        tabSearch.classList.remove("hidden");  tabCreate.classList.add("hidden");
+      }
+      updateIndicator();
+    }
+    tabCreateBtn.addEventListener("click", ()=>activateTab("create"));
+    tabSearchBtn.addEventListener("click", ()=>activateTab("search"));
+    window.addEventListener("resize", updateIndicator);
+
+    /* ===== Ripple ===== */
+    function attachRipple(el){
+      el.addEventListener("click", (e)=>{
+        const rect = el.getBoundingClientRect();
+        const r = document.createElement("span");
+        r.className = "ripple";
+        const size = Math.max(rect.width, rect.height);
+        r.style.width = r.style.height = size + "px";
+        r.style.left = (e.clientX - rect.left - size/2) + "px";
+        r.style.top  = (e.clientY - rect.top  - size/2) + "px";
+        el.appendChild(r);
+        setTimeout(()=> r.remove(), 650);
+      });
+    }
+    [ "#submitBtn", "#searchBtn", "#clearBtn" ].forEach(sel=>{
+      const b = $(sel); if(b) attachRipple(b);
+    });
+
+    /* ===== Create form ===== */
+    const otherChk  = $("#otherChk");
+    const otherWrap = $("#otherWrap");
+    const otherTxt  = $("#otherTxt");
+    otherChk.addEventListener("change", ()=>{
+      otherWrap.classList.toggle("hidden", !otherChk.checked);
+      if(!otherChk.checked) otherTxt.value = "";
+    });
+
+    const info = $("#info"), infoCount = $("#infoCount");
+    info.addEventListener("input", ()=> infoCount.textContent = info.value.length);
+
+    const discordInput = $("#discord");
+    const expInput     = $("#expDate");
+
+    function isDiscordUrl(u){
+      if(!u) return false;
+      try{
+        const url = new URL(u);
+        return /(^|\.)discord\.gg$/.test(url.hostname) || /(^|\.)discord\.com$/.test(url.hostname);
+      }catch{ return false; }
+    }
+    function toEndOfDayLocal(yyyy_mm_dd){
+      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+      return new Date(y, m-1, d, 23, 59, 59, 999);
+    }
+
+    function getSelectedGenresForCreate(){
+      const arr = $$("input[name='genres']:checked").map(i=>i.value);
+      const idx = arr.indexOf("อื่นๆ");
+      if(idx>-1){
+        const extra = (otherTxt.value||"").trim();
+        if(extra) arr[idx] = extra; else arr.splice(idx,1);
+      }
+      return arr;
+    }
+
+    const createForm = $("#createForm");
+    const submitBtn  = $("#submitBtn");
+    const submitMsg  = $("#submitMsg");
+
+    function setBtnLoading(btn, isLoading, textWhenLoading = "กำลังทำงาน..."){
+      const label = btn.querySelector(".labelText");
+      if(isLoading){
+        btn.dataset.state = "loading";
+        btn.disabled = true;
+        if(label) label.textContent = textWhenLoading;
+      }else{
+        btn.dataset.state = "";
+        btn.disabled = false;
+        if(label){
+          if(btn === submitBtn)          label.textContent = "โพสต์";
+          else if(btn.id === "searchBtn")label.textContent = "ค้นหา";
+          else if(btn.id === "clearBtn") label.textContent = "ล้างตัวกรอง";
+        }
+      }
+    }
+    function toast(msg){
+      const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+      setTimeout(()=> t.classList.remove("show"), 2200);
+    }
+
+    // ลบเอกสารที่หมดอายุ (ฝั่ง client)
+    async function cleanupExpired(){
+      try{
+        const nowTs = Timestamp.fromDate(new Date());
+        const snap = await getDocs(query(col, where("expAt","<=", nowTs), limit(50)));
+        const jobs = snap.docs.map(d => deleteDoc(doc(db, "role_posts", d.id)));
+        if(jobs.length) await Promise.all(jobs);
+      }catch(e){
+        console.warn("cleanupExpired:", e?.message||e);
+      }
+    }
+
+    createForm.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      submitMsg.textContent = "";
+
+      const type    = (new FormData(createForm)).get("type");
+      const name    = $("#name").value.trim();
+      const discord = discordInput.value.trim();
+      const expRaw  = expInput.value;
+      const genres  = getSelectedGenresForCreate();
+      const detail  = $("#info").value.trim();
+
+      if(!type || !name || !detail || genres.length===0 || !discord || !expRaw){
+        createForm.classList.remove("shake"); void createForm.offsetWidth; createForm.classList.add("shake");
+        submitMsg.textContent = "กรอกไม่ครบ"; submitMsg.className = "text-sm text-pink-400";
+        return;
+      }
+      if(!isDiscordUrl(discord)){
+        createForm.classList.remove("shake"); void createForm.offsetWidth; createForm.classList.add("shake");
+        submitMsg.textContent = "ลิงก์ดิสไม่ถูกต้อง (ต้องเป็น discord.gg หรือ discord.com)"; submitMsg.className = "text-sm text-pink-400";
+        return;
+      }
+
+      const expDate = toEndOfDayLocal(expRaw);
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      if(expDate < todayStart){
+        createForm.classList.remove("shake"); void createForm.offsetWidth; createForm.classList.add("shake");
+        submitMsg.textContent = "วันหมดเปิดรับต้องเป็นวันนี้หรือในอนาคต"; submitMsg.className = "text-sm text-pink-400";
+        return;
+      }
+
+      setBtnLoading(submitBtn, true, "กำลังบันทึก...");
+      try{
+        await addDoc(col, {
+          type, name, genres, info: detail,
+          discord,
+          createdAt: serverTimestamp(),
+          expAt: Timestamp.fromDate(expDate),
+          ua: navigator.userAgent
+        });
+
+        submitMsg.textContent = "บันทึกสำเร็จ 🎉"; submitMsg.className = "text-sm text-green-400";
+        toast("บันทึกสำเร็จ");
+        createForm.reset(); infoCount.textContent = "0"; otherWrap.classList.add("hidden");
+
+        await cleanupExpired();
+      }catch(err){
+        submitMsg.textContent = "บันทึกล้มเหลว: " + (err?.message||"Unknown");
+        submitMsg.className = "text-sm text-pink-400";
+        toast("บันทึกล้มเหลว");
+      }finally{
+        setBtnLoading(submitBtn, false);
+      }
+    });
+
+    /* ===== Search ===== */
+    const searchGenres = $("#searchGenres");
+    const searchBtn    = $("#searchBtn");
+    const clearBtn     = $("#clearBtn");
+    const resultList   = $("#resultList");
+    const resultCount  = $("#resultCount");
+    const skeletonWrap = $("#skeletonWrap");
+
+    function renderSearchChips(){
+      const values = $$("input[name='genres']").map(i=>i.value);
+      searchGenres.innerHTML = "";
+      values.forEach(v=>{
+        const id = "sg_" + v;
+        const label = document.createElement("label");
+        label.className = "chip";
+        label.innerHTML = `<input id="${id}" type="checkbox" value="${escapeHTML(v)}"><span>${escapeHTML(v)}</span>`;
+        searchGenres.appendChild(label);
+      });
+      const sgOther = $("#sg_อื่นๆ");
+      sgOther?.addEventListener("change", ()=>{
+        $("#searchOtherWrap").classList.toggle("hidden", !sgOther.checked);
+        if(!sgOther.checked) $("#searchOtherTxt").value = "";
+      });
+      searchGenres.querySelectorAll(".chip > span").forEach(attachRipple);
+    }
+    renderSearchChips();
+
+    function getSearchType(){
+      const r = document.querySelector('input[name="stype"]:checked');
+      return r ? r.value : "ทั้งหมด";
+    }
+    function getSearchGenres(){
+      const arr = Array.from(searchGenres.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value);
+      const idx = arr.indexOf("อื่นๆ");
+      if(idx>-1){
+        const extra = ($("#searchOtherTxt").value||"").trim();
+        if(extra) arr[idx] = extra; else arr.splice(idx,1);
+      }
+      return arr;
+    }
+
+    function showSkeleton(n=6){
+      skeletonWrap.innerHTML = ""; resultList.innerHTML = "";
+      for(let i=0;i<n;i++){
+        const sk = document.createElement("div");
+        sk.className = "skeleton";
+        skeletonWrap.appendChild(sk);
+      }
+      skeletonWrap.classList.remove("hidden");
+    }
+    function hideSkeleton(){ skeletonWrap.classList.add("hidden"); skeletonWrap.innerHTML = "" }
+
+    // escape / nl2br
+    function escapeHTML(s){
+      return String(s||"").replace(/[&<>"']/g, m=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
+    }
+    function nl2brSafe(s){ return escapeHTML(s).replace(/\r\n|\r|\n/g, "<br>"); }
+    function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
+
+    // ★★★ แก้ให้ค้นหาเสถียร + ปิดโหลด/ซ่อนสเกเลตันเมื่อ error ★★★
+    async function runSearch(){
+      setBtnLoading(searchBtn, true, "กำลังค้นหา...");
+      showSkeleton(6);
+      resultCount.textContent = "กำลังค้นหา...";
+
+      try {
+        await cleanupExpired();
+
+        const sType = getSearchType();
+        const tags  = getSearchGenres();
+
+        let docs = [];
+
+        // ลอง query ฝั่งเซิร์ฟเวอร์ก่อน
+        try {
+          let qy;
+          if(tags.length>0){
+            qy = (sType!=="ทั้งหมด")
+              ? query(col, where("type","==",sType), where("genres","array-contains-any", tags), limit(50))
+              : query(col, where("genres","array-contains-any", tags), limit(50));
+          }else{
+            qy = (sType!=="ทั้งหมด")
+              ? query(col, where("type","==",sType), limit(50))
+              : query(col, limit(50));
+          }
+          const snap = await getDocs(qy);
+          docs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+        } catch (e1) {
+          // Fallback: ดึงชุดใหญ่แล้วกรองฝั่ง client
+          try {
+            const snap = await getDocs(query(col, limit(100)));
+            docs = snap.docs.map(d=>({id:d.id, ...d.data()}))
+              .filter(v=>{
+                const okType = (sType==="ทั้งหมด") ? true : (v.type===sType);
+                const okTag  = (tags.length===0) ? true : (Array.isArray(v.genres) && v.genres.some(g=>tags.includes(g)));
+                return okType && okTag;
+              });
+          } catch (e2) {
+            throw e2;
+          }
+        }
+
+        // กันประกาศหมดอายุ + เรียงใหม่สุดก่อน
+        const now = Date.now();
+        docs = docs
+          .filter(v => {
+            const exp = v.expAt?.toDate?.() ? v.expAt.toDate().getTime() : Infinity;
+            return exp >= now;
+          })
+          .sort((a,b)=> (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0) );
+
+        hideSkeleton();
+        resultCount.textContent = `พบ ${docs.length} รายการ`;
+        resultList.innerHTML = docs.length? "" : '<div class="muted">— ไม่พบข้อมูล —</div>';
+
+        const frag = document.createDocumentFragment();
+        docs.forEach((v, idx)=>{
+          const card = document.createElement("div");
+          card.className = "card fade-up";
+          card.style.animationDelay = (idx*40) + "ms";
+
+          const tagsHtml = (Array.isArray(v.genres)? v.genres:[])
+            .map(t=>`<span class="chip"><span>${escapeHTML(t)}</span></span>`).join(" ");
+
+          const dt  = v.createdAt?.toDate?.() ? v.createdAt.toDate() : null;
+          const exp = v.expAt?.toDate?.()     ? v.expAt.toDate()     : null;
+          const dateText = dt ? dt.toLocaleString() : "-";
+          const expText  = exp? exp.toLocaleDateString() : "-";
+
+          const discord = typeof v.discord === "string" ? v.discord : "";
+          const hasDiscord = !!discord && /^https?:\/\//i.test(discord);
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-lg sm:text-xl font-semibold">${escapeHTML(v.name||"-")}</h3>
+              <span class="rounded-full bg-purple-900/30 border border-purple-800 px-3 py-1 text-sm">
+                ${escapeHTML(v.type||"-")}
+              </span>
+            </div>
+            <div class="mt-2 flex flex-wrap gap-2">${tagsHtml}</div>
+
+            <div class="mt-3">
+              <p class="info text-sm leading-relaxed text-clamp-3">${nl2brSafe(v.info||"")}</p>
+              <div class="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="text-xs muted">
+                  บันทึกเมื่อ: ${escapeHTML(dateText)} • หมดรับ: ${escapeHTML(expText)}
+                </div>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                  ${hasDiscord ? `
+                    <a class="btn btn-link" href="${escapeAttr(discord)}" target="_blank" rel="noopener">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M5 7v11a3 3 0 0 0 3 3h11"/>
+                      </svg>
+                      <span class="label"><span class="labelText">ไปที่ดิส</span></span>
+                    </a>` : ``}
+                  <button type="button" class="btn-lite read-more"><span>อ่านเพิ่มเติม</span></button>
+                </div>
+              </div>
+            </div>
+          `;
+          frag.appendChild(card);
+        });
+        resultList.appendChild(frag);
+
+        // ripple & ซ่อนปุ่มอ่านเพิ่มถ้าไม่ล้น
+        resultList.querySelectorAll(".btn-link, .btn-lite").forEach(attachRipple);
+        requestAnimationFrame(()=>{
+          resultList.querySelectorAll(".card").forEach(card=>{
+            const p = card.querySelector(".info");
+            const btn = card.querySelector(".read-more");
+            if(!p || !btn) return;
+            if(p.scrollHeight <= p.clientHeight + 1){
+              btn.style.display = "none";
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error("Search failed:", err);
+        hideSkeleton();
+        resultList.innerHTML = `
+          <div class="card">
+            <div class="text-pink-300 font-semibold">ค้นหาไม่สำเร็จ</div>
+            <div class="muted text-sm mt-1">อาจเกิดจาก Firestore rules ไม่อนุญาตให้อ่าน หรืออินเทอร์เน็ต/โควต้า</div>
+            <div class="muted text-xs mt-1">${(err && err.message) ? escapeHTML(err.message) : ""}</div>
+          </div>`;
+        resultCount.textContent = "";
+        toast("อ่านข้อมูลจาก Firebase ไม่ได้");
+      } finally {
+        setBtnLoading(searchBtn, false);
+      }
+    }
+
+    // Toggle อ่านเพิ่ม/ย่อ
+    resultList.addEventListener("click", (e)=>{
+      const btn = e.target.closest(".read-more");
+      if(!btn) return;
+      const card = btn.closest(".card");
+      const p = card.querySelector(".info");
+      const span = btn.querySelector("span");
+      if(!p || !span) return;
+      if(p.classList.contains("text-clamp-3")){
+        p.classList.remove("text-clamp-3");
+        span.textContent = "ย่อ";
+      }else{
+        p.classList.add("text-clamp-3");
+        span.textContent = "อ่านเพิ่มเติม";
+        p.scrollIntoView({block:"nearest", behavior:"smooth"});
+      }
+    });
+
+    // ปุ่มควบคุมค้นหา/ล้าง
+    document.getElementById("searchBtn").addEventListener("click", async ()=>{
+      if (searchBtn.disabled) return;
+      await runSearch();
+    });
+    document.getElementById("clearBtn").addEventListener("click", ()=>{
+      setBtnLoading(clearBtn, true, "กำลังล้าง…");
+      document.querySelectorAll("#searchGenres input[type='checkbox']").forEach(i=> i.checked=false);
+      document.getElementById("searchOtherTxt")?.value="";
+      document.getElementById("searchOtherWrap")?.classList.add("hidden");
+      document.querySelector("input[name='stype'][value='ทั้งหมด']").checked = true;
+      resultList.innerHTML=""; resultCount.textContent=""; hideSkeleton();
+      setTimeout(()=> setBtnLoading(clearBtn, false), 350);
+    });
+
+    // เริ่มต้น
+    (async()=>{
+      await cleanupExpired();
+      activateTab("create");
+      updateIndicator();
+    })();
+  </script>
+</body>
+</html>
