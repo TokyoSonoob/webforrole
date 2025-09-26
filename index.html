@@ -2,410 +2,692 @@
 <html lang="th">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Purple Shop — RP/BP Injector</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Purple Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  :root{
-    --bg1:#070313; --bg2:#0a0620; --bg3:#0f0a2a;
-    --p1:#8b5cf6; --p2:#60a5fa; --p3:#a78bfa;
-    --ok:#10b981; --err:#ef4444; --text:#e7e7f3; --muted:#9aa0b3;
-  }
-  html,body{height:100%}
+  :root { color-scheme: dark }
+  html,body { height:100% }
   body{
-    font-family:'Prompt',system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans Thai',sans-serif;
-    background:
-      radial-gradient(1200px 700px at -10% -10%, rgba(139,92,246,.20), transparent 60%),
-      radial-gradient(1000px 600px at 110% 10%, rgba(96,165,250,.18), transparent 65%),
-      linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 42%, var(--bg3) 100%);
-    color:var(--text);
-    overflow-x:hidden;
+    font-family:'Prompt',system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Arial;
+    background: radial-gradient(1400px 900px at 10% -10%, #2b0f44 0%, transparent 60%),
+                radial-gradient(1200px 800px at 110% 10%, #1c0b2b 0%, transparent 60%),
+                linear-gradient(180deg,#09010f 0%, #0b0613 50%, #0e0718 100%);
+    color:#e5e7eb;
   }
-  /* ไฟเฟรมซ้าย/ขวา */
-  .frame:before,.frame:after{
-    content:"";position:fixed;top:0;bottom:0;width:16px;z-index:0;pointer-events:none;filter:blur(1px);
-    background:linear-gradient(180deg,transparent,rgba(167,139,250,.45),rgba(96,165,250,.45),transparent);
-    animation:glow 3.6s linear infinite;
+  .muted{ color:#9ca3af }
+  .card{ background:#0f0a17; border:1px solid #1f1440; border-radius:16px; padding:16px }
+
+  /* Heading ไล่สี ม่วง→ขาว */
+  .heading-gradient{
+    background: linear-gradient(90deg,#4b28b4 0%, #ffffff 50%, #4b28b4 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: sheen 1s linear infinite;
   }
-  .frame:before{left:20px}
-  .frame:after{right:20px;animation-delay:1.2s}
-  @keyframes glow{0%{opacity:.35}50%{opacity:.85}100%{opacity:.35}}
+  @keyframes sheen{ 0%{background-position:0% 0} 100%{background-position:200% 0} }
+
+  .inp{
+    width:100%; background:#06040a; border:1px solid #3a1c6b; color:#fff;
+    border-radius:12px; padding:12px 16px; outline:none; transition:.2s border,.2s box-shadow;
+  }
+  .inp:focus{ border-color:#a78bfa; box-shadow:0 0 0 3px rgba(167,139,250,.25) }
+
+  /* Tabs */
+  .tabs{ position:relative }
+  .tab-btn{ border-bottom:2px solid transparent; padding:.5rem .25rem .75rem; font-weight:700 }
+  .tab-btn.active{ color:#c084fc; border-color:#a78bfa }
+  .tab-indicator{
+    position:absolute; bottom:-1px; height:2px; background:#a78bfa; border-radius:2px;
+    transition:transform .35s ease, width .35s ease; will-change:transform,width;
+  }
+
   /* ปุ่มหลัก */
-  .hero-btn{
-    position:relative; isolation:isolate; border:none; cursor:pointer; border-radius:18px;
-    padding:18px 26px; font-weight:800; letter-spacing:.3px; font-size:18px; color:white;
-    background:
-      radial-gradient(120% 180% at 20% 20%, rgba(96,165,250,.18), transparent 40%),
-      radial-gradient(120% 180% at 80% 80%, rgba(167,139,250,.22), transparent 40%),
-      linear-gradient(135deg, #6d28d9, #3b82f6);
-    box-shadow:0 18px 60px rgba(99,102,241,.35), inset 0 0 0 1px rgba(255,255,255,.08);
-    transition:transform .12s ease, box-shadow .25s ease;
+  .btn{
+    position:relative; overflow:hidden; border-radius:14px; padding:12px 20px;
+    display:inline-flex; align-items:center; gap:.6rem;
+    font-weight:700; color:#fff; background:linear-gradient(135deg,#7c3aed,#4f46e5);
+    box-shadow:0 10px 40px rgba(124,58,237,.35); transition:transform .15s ease, box-shadow .25s ease, opacity .2s;
   }
-  .hero-btn:hover{ transform:translateY(-1px); box-shadow:0 24px 72px rgba(99,102,241,.48) }
-  .hero-btn:active{ transform:translateY(0) scale(.98) }
-  .hero-btn .shine{
-    position:absolute; inset:-2px; border-radius:20px; content:""; z-index:-1; filter:blur(14px);
-    background:conic-gradient(from 0deg, rgba(139,92,246,.35), rgba(96,165,250,.35), rgba(139,92,246,.35));
-    animation:spin 4s linear infinite;
+  .btn.full{ width:100% }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 16px 52px rgba(124,58,237,.45) }
+  .btn:active{ transform:translateY(0) scale(.98) }
+  .btn:disabled{ opacity:.6; cursor:not-allowed }
+  .btn .label{ display:inline-flex; align-items:center; gap:.5rem }
+  .btn .spinner{
+    width:18px; height:18px; border-radius:50%;
+    border:3px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin 1s linear infinite; display:none;
   }
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn[data-state="loading"] .spinner{ display:inline-block }
+  .btn[data-state="loading"] .labelText{ opacity:.7 }
+  .btn[data-state="loading"]{ animation:pulseGlow 1s ease-in-out infinite }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+  @keyframes pulseGlow{ 0%,100%{ box-shadow:0 10px 40px rgba(124,58,237,.35) } 50%{ box-shadow:0 14px 60px rgba(167,139,250,.55) } }
+
+  /* ปุ่มเล็กใช้กับ "อ่านเพิ่มเติม" */
+  .btn-lite{
+    position:relative; overflow:hidden; border-radius:999px; padding:.35rem .8rem;
+    display:inline-flex; align-items:center; gap:.4rem; font-weight:700; color:#e9d5ff;
+    background:linear-gradient(135deg,#1a0f2a,#140b22); border:1px solid #5b21b6;
+    box-shadow:0 6px 18px rgba(124,58,237,.22); transition:transform .12s, box-shadow .2s, background .2s, color .2s;
+  }
+  .btn-lite:hover{ background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff; box-shadow:0 10px 32px rgba(124,58,237,.45) }
+  .btn-lite:active{ transform:translateY(0) scale(.98) }
+
+  /* ชิป */
+  .chip{ position:relative; display:inline-flex; align-items:center; border-radius:999px; cursor:pointer; user-select:none }
+  .chip input{ position:absolute; opacity:0 }
+  .chip > span{
+    display:inline-flex; align-items:center; gap:.5rem; padding:.55rem 1rem; font-weight:600;
+    border-radius:999px; border:1px solid #5b21b6; color:#e9d5ff; background:linear-gradient(135deg,#1a0f2a,#140b22);
+    transition:transform .12s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease, opacity .2s;
+    box-shadow:0 6px 18px rgba(124,58,237,.22);
+  }
+  .chip:active > span{ transform:translateY(1px) scale(.98) }
+  .chip input:checked + span{
+    background:linear-gradient(135deg,#7c3aed,#4f46e5);
+    border-color:#8b5cf6; color:#fff;
+    box-shadow:0 10px 32px rgba(124,58,237,.45), inset 0 0 10px rgba(167,139,250,.28);
+  }
+
   /* Ripple */
-  .ripple{position:absolute;border-radius:50%;transform:scale(0);opacity:.75;pointer-events:none;
-    background:radial-gradient(circle, rgba(255,255,255,.4) 0%, rgba(255,255,255,.12) 40%, transparent 60%);
-    animation:ripple .6s ease-out forwards;}
-  @keyframes ripple{to{transform:scale(6);opacity:0}}
-  /* กล่องทำงาน / สปินเนอร์ */
-  .work{
-    border-radius:18px; border:1px solid rgba(167,139,250,.25);
-    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
-    box-shadow:0 18px 60px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+  .ripple{ position:absolute; border-radius:50%; transform:scale(0); opacity:.55;
+    background:radial-gradient(circle, rgba(255,255,255,.35) 0%, rgba(255,255,255,.15) 40%, transparent 60%);
+    animation:ripple .6s ease-out forwards; pointer-events:none;
   }
-  .spinner{width:38px;height:38px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin 1s linear infinite}
-  .check{ width:64px;height:64px;border-radius:50%; background:rgba(16,185,129,.15); border:3px solid var(--ok); display:grid; place-items:center; }
-  .check svg{ transform:scale(.9); }
-  .fade-in{animation:fade .25s ease-out forwards; opacity:0; transform:translateY(6px)}
-  @keyframes fade{to{opacity:1;transform:none}}
-  /* โมดัลคู่ (RP/BP) */
-  .modal{ position:fixed; inset:0; background:rgba(6,4,12,.6); backdrop-filter: blur(10px); display:none; z-index:40; }
-  .modal.open{ display:grid; place-items:center; }
-  .panel{
-    width:min(1000px, 96vw);
-    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)) , #0e0a1d;
-    border:1px solid rgba(167,139,250,.28); border-radius:22px;
-    box-shadow:0 26px 80px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.02);
-    overflow:hidden; transform:scale(.96); opacity:0; animation:pop .28s ease-out .05s forwards;
+  @keyframes ripple{ to{ transform:scale(6); opacity:0 } }
+
+  /* Skeleton / fade */
+  .skeleton{ position:relative; overflow:hidden; border-radius:16px; background:#0a0712; border:1px solid #1f1440; height:132px }
+  .skeleton::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(167,139,250,.10), transparent); animation:shimmer 1.2s infinite; }
+  @keyframes shimmer{ 0%{ transform:translateX(-100%) } 100%{ transform:translateX(100%) } }
+  .fade-up{ opacity:0; transform:translateY(10px); animation:fadeUp .35s ease forwards }
+  @keyframes fadeUp{ to{ opacity:1; transform:none } }
+
+  .toast{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(20px); background:#0b0613; border:1px solid #512c9b; color:#e9d5ff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 40px rgba(124,58,237,.4); opacity:0; pointer-events:none; }
+  .toast.show{ animation:toastIn .3s ease forwards }
+  @keyframes toastIn{ to{ opacity:1; transform:translateX(-50%) translateY(0) } }
+
+  @keyframes shake{ 10%,90%{transform:translateX(-1px)} 20%,80%{transform:translateX(2px)} 30%,50%,70%{transform:translateX(-4px)} 40%,60%{transform:translateX(4px)} }
+  .shake{ animation:shake .5s both }
+
+  /* Clamp 3 บรรทัด */
+  .text-clamp-3{
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
   }
-  @keyframes pop{to{transform:scale(1);opacity:1}}
-  .panel header{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px;
-    background:linear-gradient(180deg, rgba(167,139,250,.16), rgba(167,139,250,.06)); border-bottom:1px solid rgba(167,139,250,.2) }
-  .panel h3{ margin:0; font-size:16px; letter-spacing:.3px }
-  .codebox{ padding:12px 14px; background:#0b0a18; border:1px solid #221f3e; border-radius:14px; color:#e6f3ff;
-    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; line-height:1.45; box-shadow: inset 0 0 22px rgba(20,20,48,.6); min-height:120px; }
-  .twinkle{ animation:twinkle 1.6s ease-in-out infinite; }
-  @keyframes twinkle{ 50%{opacity:.6} }
-  .btn{border:none;border-radius:12px;padding:10px 14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7c3aed,#3b82f6);box-shadow:0 10px 30px rgba(99,102,241,.35);cursor:pointer}
-  .btn:active{ transform: translateY(1px) }
-  .btn.secondary{ background:#1b1f3a; border:1px solid rgba(167,139,250,.25); box-shadow:none; color:#e9e9f2 }
-  .hint{ color:var(--muted) }
-  .tag{ display:inline-block; border-radius:999px; padding:2px 8px; border:1px solid rgba(167,139,250,.3); background:#14183a; font-size:12px; margin-right:6px }
+
+  @media (max-width: 640px){
+    .meta-row{ display:flex; flex-direction:column; align-items:stretch; gap:.5rem; }
+    .meta-row .actions{ display:flex; flex-direction:column; align-items:stretch; gap:.5rem; width:100%; }
+    .meta-row .actions .btn-lite{ align-self:flex-start; }
+    .meta-row .actions .btn-mobile-full{ width:100%; }
+  }
+
+  /* === Read-more expand animation (โหดๆ) === */
+  .expand-animating{ overflow:hidden; will-change:height, opacity; }
+  .card.burst{ animation:burstGlow 520ms ease-out; }
+  @keyframes burstGlow{
+    0%{ box-shadow:0 0 0 rgba(167,139,250,0); }
+    35%{ box-shadow:0 18px 72px rgba(167,139,250,.55); }
+    100%{ box-shadow:0 10px 40px rgba(124,58,237,.35); }
+  }
 </style>
 </head>
 <body>
-<div class="frame"></div>
-
-<main class="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
-  <!-- Heading -->
-  <header class="mb-10 sm:mb-14 text-center">
-    <h1 class="font-extrabold text-4xl sm:text-6xl tracking-tight"
-        style="background:linear-gradient(90deg,#8b5cf6,#60a5fa,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 10px 32px rgba(96,165,250,.25))">
-      💜💙 Purple Shop — RP/BP Injector
-    </h1>
-    <p class="mt-3 text-sm sm:text-base hint">อัปโหลดหลายไฟล์ได้ • จะจัดกลุ่มเป็น <span class="tag">RP/RS</span> และ <span class="tag">BP/BH</span> ให้เอง</p>
-  </header>
-
-  <!-- Hero Card -->
-  <section class="work p-6 sm:p-8">
-    <div class="flex flex-col items-center gap-6 sm:gap-8">
-      <!-- ปุ่มใหญ่อลังการ -->
-      <button id="bigBtn" class="hero-btn relative">
-        <span class="shine"></span>
-        <span class="inline-flex items-center gap-3">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          เลือกไฟล์ / ลากมาวาง
-        </span>
-        <input id="file" type="file" multiple hidden accept=".zip,.mcpack,.mcaddon,.json,application/zip,application/json">
-      </button>
-
-      <!-- โซนอัปโหลดแบบลาก -->
-      <div id="drop" class="w-full rounded-xl border border-violet-700/30 bg-[#0b0a18]/60 p-4 text-center text-sm hint">
-        หรือ ลากไฟล์ลงบนพื้นที่นี้ (.zip / .mcpack / .mcaddon / manifest.json)
-      </div>
-
-      <!-- โซนสถานะ -->
-      <div id="statusBox" class="w-full grid place-items-center gap-3 p-6 rounded-xl border border-violet-700/25 bg-[#0b0a18]/50">
-        <div id="sp" class="spinner"></div>
-        <div id="done" class="hidden check">
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <div id="statusText" class="text-sm sm:text-base twinkle">พร้อมทำงาน — กดปุ่มเพื่อเลือกไฟล์ หรือ ลากไฟล์ลงมาได้เลย</div>
-      </div>
-
-      <!-- รายการแพ็กที่อ่านได้ -->
-      <div id="list" class="w-full max-h-72 overflow-auto rounded-xl border border-violet-700/20 bg-[#0b0a18]/40 p-3 space-y-2"></div>
-    </div>
-  </section>
-</main>
-
-<!-- Modal RP/BP -->
-<div id="modal" class="modal">
-  <div class="panel">
-    <header>
-      <h3>ผลลัพธ์พร้อมใช้งาน (คัดลอก/ดาวน์โหลดได้ทันที)</h3>
-      <div class="flex gap-2">
-        <button id="closeModal" class="btn secondary">ปิด</button>
-      </div>
+  <main class="max-w-5xl mx-auto p-5 md:p-8">
+    <header class="mb-6">
+      <h1 class="heading-gradient text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05]">Purple Shop</h1>
+      <p class="muted mt-1">สามารถโพสต์และหาโรลกันได้เลย</p>
     </header>
-    <div class="grid gap-4 sm:grid-cols-2 p-4 sm:p-5">
-      <section class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h4 class="font-semibold">world_resource_packs.json (RP/RS)</h4>
-          <div class="flex gap-2">
-            <button id="copyRS" class="btn secondary">คัดลอก</button>
-            <button id="dlRS" class="btn">ดาวน์โหลด</button>
-          </div>
-        </div>
-        <pre class="codebox"><code id="outRS">[]</code></pre>
-      </section>
 
-      <section class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h4 class="font-semibold">world_behavior_packs.json (BP/BH)</h4>
-          <div class="flex gap-2">
-            <button id="copyBH" class="btn secondary">คัดลอก</button>
-            <button id="dlBH" class="btn">ดาวน์โหลด</button>
+    <!-- Tabs -->
+    <nav class="tabs flex gap-4 border-b border-purple-950/60 mb-6">
+      <button id="tabCreateBtn" type="button" class="tab-btn active">กรอก</button>
+      <button id="tabSearchBtn" type="button" class="tab-btn">หาข้อมูล</button>
+      <div id="tabIndicator" class="tab-indicator" style="width:0"></div>
+    </nav>
+
+    <!-- Create -->
+    <section id="tabCreate" class="grid gap-5">
+      <form id="createForm" class="card grid gap-5" autocomplete="off">
+        <div>
+          <label class="block text-sm mb-2">ประเภท <span class="text-pink-400">*</span></label>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip"><input type="radio" name="type" value="หาลูกโรล" required><span>หาลูกโรล</span></label>
+            <label class="chip"><input type="radio" name="type" value="หาแอดมิน" required><span>หาแอดมิน</span></label>
           </div>
         </div>
-        <pre class="codebox"><code id="outBH">[]</code></pre>
-      </section>
-    </div>
-    <div class="px-5 pb-5 -mt-2">
-      <p class="hint">เรียงตามชื่อแพ็ก (รองรับไทย) → แล้วตามเวอร์ชันมาก→น้อย • ไม่ซ้ำ UUID</p>
+
+        <div>
+          <label for="name" class="block text-sm mb-2">ชื่อโรล <span class="text-pink-400">*</span></label>
+          <input id="name" class="inp" type="text" maxlength="80" placeholder="เช่น ห้องโรลธีมโรงเรียน" required>
+          <p class="mt-1 text-xs muted">ไม่เกิน 80 ตัวอักษร</p>
+        </div>
+
+        <!-- Discord link -->
+        <div>
+          <label for="discord" class="block text-sm mb-2">ลิงก์ดิสคอร์ด <span class="text-pink-400">*</span></label>
+          <input id="discord" class="inp" type="url" maxlength="200" placeholder="https://discord.gg/xxxxxx" required>
+          <p class="mt-1 text-xs muted">ใช้สร้างปุ่ม “ไปที่ดิส” ในหน้าค้นหา</p>
+        </div>
+
+        <!-- Expire date -->
+        <div>
+          <label for="expDate" class="block text-sm mb-2">วันปิดรับ <span class="text-pink-400">*</span></label>
+          <input id="expDate" class="inp" type="date" required>
+          <p class="mt-1 text-xs muted">ถึงวันดังกล่าวแล้ว ระบบจะลบประกาศออกอัตโนมัติ</p>
+        </div>
+
+        <div>
+          <label class="block text-sm mb-2">แนวโรล (เลือกได้หลายอัน) <span class="text-pink-400">*</span></label>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip"><input type="checkbox" name="genres" value="โรงเรียน"><span>โรงเรียน</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="คุก"><span>คุก</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="แฟนตาซี"><span>แฟนตาซี</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="นักสืบ"><span>นักสืบ</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="ยุคปัจจุบัน"><span>ยุคปัจจุบัน</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="ยุคกลาง"><span>ยุคกลาง</span></label>
+            <label class="chip"><input type="checkbox" name="genres" value="ซอมบี้"><span>ซอมบี้</span></label>
+            <label class="chip"><input id="otherChk" type="checkbox" name="genres" value="อื่นๆ"><span>อื่นๆ</span></label>
+          </div>
+          <div id="otherWrap" class="mt-3 hidden">
+            <input id="otherTxt" type="text" maxlength="40" placeholder="ระบุแนวอื่น ๆ" class="inp">
+          </div>
+        </div>
+
+        <div>
+          <label for="info" class="block text-sm mb-2">กรอกข้อมูล <span class="text-pink-400">*</span></label>
+          <textarea id="info" class="inp min-h-[160px]" maxlength="3000" placeholder="กรอกข้อมูล เนื้อเรื่อง ประวัติ กฏ" required></textarea>
+          <p class="mt-1 text-xs muted"><span id="infoCount">0</span>/3000</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="submitBtn" type="submit" class="btn full">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="label"><span class="labelText">โพสต์</span></span>
+          </button>
+          <span id="submitMsg" class="text-sm"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Search -->
+    <section id="tabSearch" class="hidden grid gap-5">
+      <div id="searchControls" class="card grid gap-5">
+        <div>
+          <label class="block text-sm mb-2">ค้นหาตามประเภท</label>
+          <div class="flex flex-wrap gap-2">
+            <label class="chip"><input type="radio" name="stype" value="ทั้งหมด" checked><span>ทั้งหมด</span></label>
+            <label class="chip"><input type="radio" name="stype" value="หาลูกโรล"><span>หาลูกโรล</span></label>
+            <label class="chip"><input type="radio" name="stype" value="หาแอดมิน"><span>หาแอดมิน</span></label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm mb-2">กรองตามแนวโรล (เลือกได้หลายอัน • ตรงแค่บางอันก็ขึ้น)</label>
+          <div id="searchGenres" class="flex flex-wrap gap-2"></div>
+          <div id="searchOtherWrap" class="mt-3 hidden">
+            <input id="searchOtherTxt" type="text" maxlength="40" placeholder="แนวอื่น ๆ" class="inp">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="searchBtn" type="button" class="btn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="label"><span class="labelText">ค้นหา</span></span>
+          </button>
+          <button id="clearBtn" type="button" class="btn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="label"><span class="labelText">ล้างตัวกรอง</span></span>
+          </button>
+          <span id="resultCount" class="text-sm muted"></span>
+        </div>
+      </div>
+
+      <div id="skeletonWrap" class="grid gap-4 hidden"></div>
+      <div id="resultList" class="grid gap-4"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    /* ===== Firebase ===== */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, where, getDocs, limit, Timestamp, doc, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDm5l5gPl5CxAIpGq7nUBp2ikj7-g3_tH4",
+      authDomain: "ticket-423dd.firebaseapp.com",
+      projectId: "ticket-423dd",
+      storageBucket: "ticket-423dd.firebasestorage.app",
+      messagingSenderId: "52724074155",
+      appId: "1:52724074155:web:75f96a9b5d541dfca219ee",
+      measurementId: "G-HXML7YNGNX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const col = collection(db, "role_posts");
+
+    const $  = (q)=>document.querySelector(q);
+    const $$ = (q)=>Array.from(document.querySelectorAll(q));
+
+    /* Tabs */
+    const tabCreateBtn = $("#tabCreateBtn");
+    const tabSearchBtn = $("#tabSearchBtn");
+    const tabCreate    = $("#tabCreate");
+    const tabSearch    = $("#tabSearch");
+    const indicator    = $("#tabIndicator");
+    const tabsWrap     = document.querySelector(".tabs");
+
+    function updateIndicator(){
+      const active = document.querySelector(".tab-btn.active");
+      const nb = active.getBoundingClientRect();
+      const wb = tabsWrap.getBoundingClientRect();
+      const left = nb.left - wb.left;
+      indicator.style.width = nb.width + "px";
+      indicator.style.transform = `translateX(${left}px)`;
+    }
+    function activateTab(which){
+      if(which==="create"){
+        tabCreateBtn.classList.add("active"); tabSearchBtn.classList.remove("active");
+        tabCreate.classList.remove("hidden");  tabSearch.classList.add("hidden");
+      }else{
+        tabSearchBtn.classList.add("active"); tabCreateBtn.classList.remove("active");
+        tabSearch.classList.remove("hidden");  tabCreate.classList.add("hidden");
+        runSearch(); // 🔄 เข้าแท็บหาข้อมูลแล้วค้นหาให้อัตโนมัติ
+      }
+      updateIndicator();
+    }
+    tabCreateBtn.addEventListener("click", ()=>activateTab("create"));
+    tabSearchBtn.addEventListener("click", ()=>activateTab("search"));
+    window.addEventListener("resize", updateIndicator);
+
+    /* Ripple helper */
+    function attachRipple(el){
+      el.addEventListener("click", (e)=>{
+        const rect = el.getBoundingClientRect();
+        const r = document.createElement("span");
+        r.className = "ripple";
+        const size = Math.max(rect.width, rect.height);
+        r.style.width = r.style.height = size + "px";
+        r.style.left = (e.clientX - rect.left - size/2) + "px";
+        r.style.top  = (e.clientY - rect.top  - size/2) + "px";
+        el.appendChild(r);
+        setTimeout(()=> r.remove(), 650);
+      });
+    }
+    [ "#submitBtn", "#searchBtn", "#clearBtn" ].forEach(sel=>{
+      const b = $(sel); if(b) attachRipple(b);
+    });
+
+    /* Create form */
+    const otherChk  = $("#otherChk");
+    const otherWrap = $("#otherWrap");
+    const otherTxt  = $("#otherTxt");
+    otherChk.addEventListener("change", ()=>{
+      otherWrap.classList.toggle("hidden", !otherChk.checked);
+      if(!otherChk.checked) otherTxt.value = "";
+    });
+
+    const info = $("#info"), infoCount = $("#infoCount");
+    info.addEventListener("input", ()=> infoCount.textContent = info.value.length);
+
+    const discordInput = $("#discord");
+    const expInput     = $("#expDate");
+
+    function isDiscordUrl(u){
+      if(!u) return false;
+      try{
+        const url = new URL(u);
+        return /(^|\.)discord\.gg$/.test(url.hostname) || /(^|\.)discord\.com$/.test(url.hostname);
+      }catch{ return false; }
+    }
+    function toEndOfDayLocal(yyyy_mm_dd){
+      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+      return new Date(y, m-1, d, 23, 59, 59, 999);
+    }
+
+    function getSelectedGenresForCreate(){
+      const arr = $$("input[name='genres']:checked").map(i=>i.value);
+      const idx = arr.indexOf("อื่นๆ");
+      if(idx>-1){
+        const extra = (otherTxt.value||"").trim();
+        if(extra) arr[idx] = extra; else arr.splice(idx,1);
+      }
+      return arr;
+    }
+
+    const createForm = $("#createForm");
+    const submitBtn  = $("#submitBtn");
+    const submitMsg  = $("#submitMsg");
+
+    function setBtnLoading(btn, isLoading, textWhenLoading = "กำลังทำงาน..."){
+      const label = btn.querySelector(".labelText");
+      if(isLoading){
+        btn.dataset.state = "loading";
+        btn.disabled = true;
+        if(label) label.textContent = textWhenLoading;
+      }else{
+        btn.dataset.state = "";
+        btn.disabled = false;
+        if(label){
+          if(btn === submitBtn)          label.textContent = "โพสต์";
+          else if(btn.id === "searchBtn")label.textContent = "ค้นหา";
+          else if(btn.id === "clearBtn") label.textContent = "ล้างตัวกรอง";
+        }
+      }
+    }
+    function toast(msg){
+      const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+      setTimeout(()=> t.classList.remove("show"), 2200);
+    }
+
+    // 🔧 ลบเอกสารที่หมดอายุ (ฝั่ง client)
+    async function cleanupExpired(){
+      try{
+        const nowTs = Timestamp.fromDate(new Date());
+        const snap = await getDocs(query(col, where("expAt","<=", nowTs), limit(50)));
+        const jobs = snap.docs.map(d => deleteDoc(doc(db, "role_posts", d.id)));
+        if(jobs.length) await Promise.all(jobs);
+      }catch(e){
+        console.warn("cleanupExpired:", e?.message||e);
+      }
+    }
+
+    createForm.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      submitMsg.textContent = "";
+
+      const type    = (new FormData(createForm)).get("type");
+      const name    = $("#name").value.trim();
+      const discord = discordInput.value.trim();
+      const expRaw  = expInput.value;
+      const genres  = getSelectedGenresForCreate();
+      const detail  = $("#info").value.trim();
+
+      if(!type || !name || !detail || genres.length===0 || !discord || !expRaw){
+        createForm.classList.remove("shake"); void createForm.offsetWidth; createForm.classList.add("shake");
+        submitMsg.textContent = "กรอกไม่ครบ"; submitMsg.className = "text-sm text-pink-400";
+        return;
+      }
+      if(!isDiscordUrl(discord)){
+        createForm.classList.remove("shake"); void createForm.offsetWidth; createForm.classList.add("shake");
+        submitMsg.textContent = "ลิงก์ดิสไม่ถูกต้อง (ต้องเป็น discord.gg หรือ discord.com)"; submitMsg.className = "text-sm text-pink-400";
+        return;
+      }
+
+      const expDate = toEndOfDayLocal(expRaw);
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      if(expDate < todayStart){
+        createForm.classList.remove("shake"); void createForm.offsetWidth; createForm.classList.add("shake");
+        submitMsg.textContent = "วันหมดเปิดรับต้องเป็นวันนี้หรือในอนาคต"; submitMsg.className = "text-sm text-pink-400";
+        return;
+      }
+
+      setBtnLoading(submitBtn, true, "กำลังบันทึก...");
+      try{
+        await addDoc(col, {
+          type, name, genres, info: detail,
+          discord,
+          createdAt: serverTimestamp(),
+          expAt: Timestamp.fromDate(expDate),
+          ua: navigator.userAgent
+        });
+
+        submitMsg.textContent = "บันทึกสำเร็จ 🎉"; submitMsg.className = "text-sm text-green-400";
+        toast("บันทึกสำเร็จ");
+        createForm.reset(); infoCount.textContent = "0"; otherWrap.classList.add("hidden");
+
+        await cleanupExpired();
+      }catch(err){
+        submitMsg.textContent = "บันทึกล้มเหลว: " + (err?.message||"Unknown");
+        submitMsg.className = "text-sm text-pink-400";
+        toast("บันทึกล้มเหลว");
+      }finally{
+        setBtnLoading(submitBtn, false);
+      }
+    });
+
+    /* Search */
+    const searchGenres = $("#searchGenres");
+    const searchBtn    = $("#searchBtn");
+    const clearBtn     = $("#clearBtn");
+    const resultList   = $("#resultList");
+    const resultCount  = $("#resultCount");
+    const skeletonWrap = $("#skeletonWrap");
+
+    function renderSearchChips(){
+      const values = $$("input[name='genres']").map(i=>i.value);
+      searchGenres.innerHTML = "";
+      values.forEach(v=>{
+        const id = "sg_" + v;
+        const label = document.createElement("label");
+        label.className = "chip";
+        label.innerHTML = `<input id="${id}" type="checkbox" value="${escapeHTML(v)}"><span>${escapeHTML(v)}</span>`;
+        searchGenres.appendChild(label);
+      });
+      const sgOther = $("#sg_อื่นๆ");
+      sgOther?.addEventListener("change", ()=>{
+        $("#searchOtherWrap").classList.toggle("hidden", !sgOther.checked);
+        if(!sgOther.checked) $("#searchOtherTxt").value = "";
+        runSearch(); // 🔄 เปลี่ยนสถานะ "อื่นๆ" ให้ค้นหาใหม่
+      });
+      searchGenres.querySelectorAll(".chip > span").forEach(attachRipple);
+
+      // 🔄 เปลี่ยนชิปแล้วค้นหาใหม่ทันที
+      searchGenres.addEventListener("change", ()=> runSearch());
+    }
+    renderSearchChips();
+
+    // 🔄 เปลี่ยนประเภทแล้วค้นหาใหม่
+    document.querySelectorAll('input[name="stype"]').forEach(el=>{
+      el.addEventListener('change', ()=> runSearch());
+    });
+
+    // 🔄 พิมพ์แนว "อื่นๆ" แล้วค้นหา (หน่วงเล็กน้อย)
+    let otherDebounce;
+    $("#searchOtherTxt")?.addEventListener('input', ()=>{
+      clearTimeout(otherDebounce);
+      otherDebounce = setTimeout(()=> runSearch(), 350);
+    });
+
+    function getSearchType(){
+      const r = document.querySelector('input[name="stype"]:checked');
+      return r ? r.value : "ทั้งหมด";
+    }
+    function getSearchGenres(){
+      const arr = Array.from(searchGenres.querySelectorAll('input[type="checkbox"]:checked')).map(i=>i.value);
+      const idx = arr.indexOf("อื่นๆ");
+      if(idx>-1){
+        const extra = ($("#searchOtherTxt").value||"").trim();
+        if(extra) arr[idx] = extra; else arr.splice(idx,1);
+      }
+      return arr;
+    }
+
+    function showSkeleton(n=6){
+      skeletonWrap.innerHTML = ""; resultList.innerHTML = "";
+      for(let i=0;i<n;i++){
+        const sk = document.createElement("div");
+        sk.className = "skeleton";
+        skeletonWrap.appendChild(sk);
+      }
+      skeletonWrap.classList.remove("hidden");
+    }
+    function hideSkeleton(){ skeletonWrap.classList.add("hidden"); skeletonWrap.innerHTML = "" }
+
+    // --- แปลง \n เป็น <br> เพื่อให้ขึ้นบรรทัดใหม่ตอนแสดง ---
+    function escapeHTML(s){
+      return String(s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
+    }
+    function nl2brSafe(s){
+      return escapeHTML(s).replace(/\r\n|\r|\n/g, "<br>");
+    }
+
+    async function runSearch(){
+      setBtnLoading(searchBtn, true, "กำลังค้นหา...");
+      showSkeleton(6);
+      resultCount.textContent = "กำลังค้นหา...";
+
+      // กวาดลบหมดอายุ
+      await cleanupExpired();
+
+      const sType = getSearchType();
+      const tags  = getSearchGenres();
+
+      let docs = [];
+      try{
+        let qy;
+        if(tags.length>0){
+          if(sType!=="ทั้งหมด"){
+            qy = query(col, where("type","==",sType), where("genres","array-contains-any", tags), limit(50));
+          }else{
+            qy = query(col, where("genres","array-contains-any", tags), limit(50));
+          }
+        }else{
+          qy = (sType!=="ทั้งหมด") ? query(col, where("type","==",sType), limit(50)) : query(col, limit(50));
+        }
+        const snap = await getDocs(qy);
+        docs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      }catch(err){
+        const snap = await getDocs(query(col, limit(100)));
+        docs = snap.docs.map(d=>({id:d.id, ...d.data()}))
+          .filter(v=>{
+            const okType = (sType==="ทั้งหมด") ? true : (v.type===sType);
+            const okTag  = (tags.length===0) ? true : (Array.isArray(v.genres) && v.genres.some(g=>tags.includes(g)));
+            return okType && okTag;
+          });
+      }
+
+      // กันประกาศหมดอายุ
+      const now = Date.now();
+      docs = docs.filter(v => {
+        const exp = v.expAt?.toDate?.() ? v.expAt.toDate().getTime() : Infinity;
+        return exp >= now;
+      });
+
+      docs.sort((a,b)=> (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0) );
+
+      hideSkeleton();
+      resultCount.textContent = `พบ ${docs.length} รายการ`;
+      resultList.innerHTML = docs.length? "" : '<div class="muted">— ไม่พบข้อมูล —</div>';
+
+      const frag = document.createDocumentFragment();
+      docs.forEach((v, idx)=>{
+        const card = document.createElement("div");
+        card.className = "card fade-up";
+        card.style.animationDelay = (idx*40) + "ms";
+
+        const tagsHtml = (Array.isArray(v.genres)? v.genres:[])
+          .map(t=>`<span class="chip"><span>${escapeHTML(t)}</span></span>`).join(" ");
+
+        const dt  = v.createdAt?.toDate?.() ? v.createdAt.toDate() : null;
+        const exp = v.expAt?.toDate?.()     ? v.expAt.toDate()     : null;
+        const dateText = dt ? dt.toLocaleString() : "-";
+        const expText  = exp? exp.toLocaleDateString() : "-";
+
+        const discord = typeof v.discord === "string" ? v.discord : "";
+        const hasDiscord = !!discord && /^https?:\/\//i.test(discord);
+
+        card.innerHTML = `
+  <div class="flex items-center justify-between gap-3">
+    <h3 class="text-lg font-semibold">${escapeHTML(v.name||"-")}</h3>
+    <span class="rounded-full bg-purple-900/30 border border-purple-800 px-3 py-1 text-sm">
+      ${escapeHTML(v.type||"-")}
+    </span>
+  </div>
+  <div class="mt-2 flex flex-wrap gap-2">${tagsHtml}</div>
+
+  <div class="mt-3">
+    <p class="info text-sm leading-relaxed text-clamp-3">${nl2brSafe(v.info||"")}</p>
+
+    <div class="mt-3 meta-row flex items-center justify-between gap-3">
+      <div class="actions flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto">
+        <button type="button" class="btn-lite read-more"><span>อ่านเพิ่มเติม</span></button>
+        ${hasDiscord ? `
+          <a class="btn btn-link btn-mobile-full"
+             href="${escapeAttr(discord)}" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M5 7v11a3 3 0 0 0 3 3h11"/>
+            </svg>
+            <span class="label"><span class="labelText">ไปที่ดิส</span></span>
+          </a>` : ``}
+      </div>
+
+      <div class="text-xs muted">
+        บันทึกเมื่อ: ${escapeHTML(dateText)} • หมดรับ: ${escapeHTML(expText)}
+      </div>
     </div>
   </div>
-</div>
+`;
 
-<!-- libs -->
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" crossorigin="anonymous"></script>
-<script>
-  const bigBtn = document.getElementById('bigBtn');
-  const fileInp = document.getElementById('file');
-  const drop = document.getElementById('drop');
-  const sp = document.getElementById('sp');
-  const done = document.getElementById('done');
-  const statusText = document.getElementById('statusText');
-  const listEl = document.getElementById('list');
-  const modal = document.getElementById('modal');
-  const closeModal = document.getElementById('closeModal');
-  const outRS = document.getElementById('outRS');
-  const outBH = document.getElementById('outBH');
-  const copyRS = document.getElementById('copyRS');
-  const copyBH = document.getElementById('copyBH');
-  const dlRS = document.getElementById('dlRS');
-  const dlBH = document.getElementById('dlBH');
+        frag.appendChild(card);
+      });
+      resultList.appendChild(frag);
 
-  // ripple
-  function ripple(e, host){
-    const rect = host.getBoundingClientRect();
-    const r = document.createElement('span');
-    r.className='ripple';
-    const size=Math.max(rect.width, rect.height);
-    r.style.width=r.style.height=size+'px';
-    r.style.left=(e.clientX-rect.left-size/2)+'px';
-    r.style.top=(e.clientY-rect.top-size/2)+'px';
-    host.appendChild(r);
-    setTimeout(()=>r.remove(),650);
-  }
+      // ใส่ ripple ให้ปุ่มที่เพิ่งสร้าง
+      resultList.querySelectorAll(".btn-link, .btn-lite").forEach(attachRipple);
 
-  bigBtn.addEventListener('click', (e)=>{
-    ripple(e, bigBtn);
-    fileInp.click();
-  });
+      // ซ่อนปุ่ม "อ่านเพิ่มเติม" ถ้าเนื้อหาไม่ล้น 3 บรรทัด
+      requestAnimationFrame(()=>{
+        resultList.querySelectorAll(".card").forEach(card=>{
+          const p = card.querySelector(".info");
+          const btn = card.querySelector(".read-more");
+          if(!p || !btn) return;
+          if(p.scrollHeight <= p.clientHeight + 1){
+            btn.style.display = "none";
+          }
+        });
+      });
 
-  // drag&drop
-  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,(e)=>{e.preventDefault(); drop.style.background='#0f0e20';}));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,(e)=>{e.preventDefault(); drop.style.background='';}));
-  drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
-  fileInp.onchange = ()=> handleFiles(fileInp.files);
+      setBtnLoading(searchBtn, false);
+    }
 
-  // data stores
-  const RS = new Map(); // pack_id -> {pack_id, version, name, from}
-  const BH = new Map();
-
-  function setWorking(on, text){
-    statusText.textContent = text || (on ? 'กำลังประมวลผล…' : 'พร้อมทำงาน');
-    sp.style.display = on ? 'block' : 'none';
-    done.classList.toggle('hidden', on);
-  }
-
-  function appendLine({name, pack_id, version, from, type}){
-    const row = document.createElement('div');
-    row.className = 'fade-in flex items-center gap-2 p-2 rounded-lg border border-violet-700/20 bg-[#0b0a18]/40';
-    row.innerHTML = `
-      <span class="tag">${type}</span>
-      <div class="grow">
-        <div class="font-semibold">${escapeHTML(name||'(ไม่ระบุ)')}</div>
-        <div class="text-xs hint">UUID: <code>${pack_id}</code> • version: <code>[${version.join(', ')}]</code> • ${escapeHTML(from||'')}</div>
-      </div>`;
-    listEl.appendChild(row);
-  }
-
-  function prettySort(arr){
-    arr.sort((a,b)=>{
-      const n = (a.name||'').toString().localeCompare((b.name||'').toString(),'th');
-      if(n!==0) return n;
-      const av=a.version||[], bv=b.version||[];
-      for(let i=0;i<Math.max(av.length,bv.length);i++){
-        const ai=av[i]??0, bi=bv[i]??0;
-        if(ai!==bi) return bi-ai;
+    // Toggle อ่านเพิ่ม/ย่อ
+    resultList.addEventListener("click", (e)=>{
+      const btn = e.target.closest(".read-more");
+      if(!btn) return;
+      const card = btn.closest(".card");
+      const p = card.querySelector(".info");
+      const span = btn.querySelector("span");
+      if(!p || !span) return;
+      if(p.classList.contains("text-clamp-3")){
+        p.classList.remove("text-clamp-3");
+        span.textContent = "ย่อ";
+      }else{
+        p.classList.add("text-clamp-3");
+        span.textContent = "อ่านเพิ่มเติม";
+        p.scrollIntoView({block:"nearest", behavior:"smooth"});
       }
-      return a.pack_id.localeCompare(b.pack_id);
     });
-    return arr;
-  }
 
-  function isZipLike(name,type){
-    const n=(name||'').toLowerCase();
-    return type==='application/zip' || /\.(zip|mcpack|mcaddon)$/.test(n);
-  }
+    function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
 
-  async function handleFiles(fileList){
-    const files = Array.from(fileList||[]);
-    if(!files.length) return;
-    RS.clear(); BH.clear(); listEl.innerHTML = '';
-    setWorking(true,'กำลังประมวลผล…');
-
-    for(const file of files){
-      try{
-        if(/manifest\.json$/i.test(file.name)){
-          const text = await file.text();
-          await handleManifest(await parseManifestText(text), file.name);
-        }else if(isZipLike(file.name, file.type)){
-          const zip = await JSZip.loadAsync(file);
-          const entry = Object.values(zip.files).find(f => /(^|\/)manifest\.json$/i.test(f.name));
-          if(!entry) throw new Error('ไม่พบ manifest.json');
-          const text = await entry.async('text');
-          await handleManifest(await parseManifestText(text), `${file.name} → ${entry.name}`);
-        }else{
-          // ข้ามไฟล์ที่ไม่รองรับ
-        }
-      }catch(e){
-        appendError(file.name + ': ' + (e?.message||e));
-      }
-    }
-
-    // เสร็จ → ติ๊กถูก แล้วเปิดโมดัล + พิมพ์ผลแบบไทป์
-    setWorking(false,'เสร็จแล้ว! ✓');
-    sp.style.display='none';
-    done.classList.remove('hidden');
-    setTimeout(()=> openModalAndType(), 420);
-  }
-
-  function appendError(msg){
-    const row = document.createElement('div');
-    row.className = 'fade-in p-2 rounded-lg border border-red-600/25 bg-red-900/20 text-red-200 text-sm';
-    row.textContent = '❌ ' + msg;
-    listEl.appendChild(row);
-  }
-
-  async function parseManifestText(text){
-    let obj;
-    try{ obj = JSON.parse(text); }
-    catch{
-      try{
-        const fixed = text.replace(/^\s*"|"\s*$/g,'').replace(/\\n/g,'\\n');
-        obj = JSON.parse(JSON.parse('"' + fixed.replace(/"/g,'\\"') + '"'));
-      }catch{ throw new Error('อ่าน JSON ไม่ได้'); }
-    }
-    return obj;
-  }
-
-  function classifyModules(mods){
-    let isRS=false, isBH=false;
-    if(Array.isArray(mods)){
-      for(const m of mods){
-        const t = (m?.type||'').toLowerCase();
-        if(t==='resources' || t==='client_data') isRS = true;
-        if(t==='data' || t==='script') isBH = true;
-      }
-    }
-    return {isRS, isBH};
-  }
-
-  async function handleManifest(obj, fromName){
-    const header = obj?.header || {};
-    const uuid = header.uuid || header.pack_id;
-    const version = header.version || header.pack_version;
-    const name = header.name || header.pack_name || 'Unknown';
-    const modules = obj?.modules || obj?.module || [];
-    if(!uuid || !version) throw new Error('ไม่พบ uuid/version');
-
-    const pack_id = String(uuid);
-    const verArr = Array.isArray(version) ? version.map(Number) : String(version).split('.').map(Number);
-
-    const {isRS, isBH} = classifyModules(modules);
-    let putRS=isRS, putBH=isBH;
-    if(!isRS && !isBH){ putRS = true; } // default เป็น RS
-
-    if(putRS){ RS.set(pack_id,{pack_id,version:verArr,name,from:fromName}); appendLine({name,pack_id,version:verArr,from:fromName,type:'RS'}); }
-    if(putBH){ BH.set(pack_id,{pack_id,version:verArr,name,from:fromName}); appendLine({name,pack_id,version:verArr,from:fromName,type:'BH'}); }
-  }
-
-  function buildJSON(){
-    const arrRS = prettySort(Array.from(RS.values())).map(({pack_id,version})=>({pack_id,version}));
-    const arrBH = prettySort(Array.from(BH.values())).map(({pack_id,version})=>({pack_id,version}));
-    return { rsText: JSON.stringify(arrRS, null, 2), bhText: JSON.stringify(arrBH, null, 2) };
-  }
-
-  // typewriter
-  async function typeOut(el, text){
-    el.textContent = '';
-    const delay = 6;
-    for(let i=0;i<text.length;i++){
-      el.textContent += text[i];
-      if(i%4===0) await new Promise(r=>setTimeout(r, delay));
-    }
-  }
-
-  function openModalAndType(){
-    const { rsText, bhText } = buildJSON();
-    modal.classList.add('open');
-    // พิมพ์สองฝั่งพร้อมกันแบบเด้งๆ
-    typeOut(outRS, rsText);
-    typeOut(outBH, bhText);
-  }
-  closeModal.onclick = ()=> modal.classList.remove('open');
-
-  // copy & download
-  async function copyText(t){ try{ await navigator.clipboard.writeText(t); toast('คัดลอกแล้ว ✓'); }catch{ toast('คัดลอกไม่สำเร็จ'); } }
-  function downloadText(t, name){
-    const blob = new Blob([t], {type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
-  }
-  copyRS.onclick = ()=> copyText(outRS.textContent);
-  copyBH.onclick = ()=> copyText(outBH.textContent);
-  dlRS.onclick   = ()=> downloadText(outRS.textContent, 'world_resource_packs.json');
-  dlBH.onclick   = ()=> downloadText(outBH.textContent, 'world_behavior_packs.json');
-
-  // toast เล็กๆ
-  function toast(msg){
-    const t = document.createElement('div');
-    t.textContent = msg;
-    t.style.position='fixed'; t.style.left='50%'; t.style.bottom='18px';
-    t.style.transform='translateX(-50%)'; t.style.background='#0b0613';
-    t.style.border='1px solid #512c9b'; t.style.color='#e9d5ff';
-    t.style.padding='10px 14px'; t.style.borderRadius='12px';
-    t.style.boxShadow='0 10px 40px rgba(124,58,237,.4)';
-    t.style.zIndex='60'; t.style.opacity='0';
-    document.body.appendChild(t);
-    requestAnimationFrame(()=>{
-      t.style.transition='opacity .25s ease, transform .25s ease';
-      t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(-6px)';
-      setTimeout(()=>{
-        t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(0)';
-        setTimeout(()=>t.remove(), 250);
-      }, 1500);
+    // ปุ่มค้นหา/ล้างยังใช้งานได้ตามเดิม
+    $("#searchBtn").addEventListener("click", runSearch);
+    $("#clearBtn").addEventListener("click", ()=>{
+      setBtnLoading(clearBtn, true, "กำลังล้าง…");
+      document.querySelectorAll("#searchGenres input[type='checkbox']").forEach(i=> i.checked=false);
+      $("#searchOtherTxt").value=""; $("#searchOtherWrap").classList.add("hidden");
+      document.querySelector("input[name='stype'][value='ทั้งหมด']").checked = true;
+      resultList.innerHTML=""; resultCount.textContent=""; skeletonWrap.classList.add("hidden"); skeletonWrap.innerHTML="";
+      setTimeout(()=> { setBtnLoading(clearBtn, false); runSearch(); }, 350); // 🔄 ล้างแล้วค้นหาใหม่อัตโนมัติ
     });
-  }
 
-  // UX: กดพื้นที่ลากแล้วก็เปิดเลือกไฟล์ได้
-  drop.addEventListener('click', ()=> fileInp.click());
-</script>
+    // เริ่มต้น
+    (async()=>{
+      await cleanupExpired();
+      // พรีเฟทช์ผลค้นหาไว้ก่อน (แสดงทั้งหมด)
+      runSearch(); // 🔄 โหลดรายการทั้งหมดตั้งแต่เริ่ม
+      activateTab("create");
+      updateIndicator();
+    })();
+  </script>
 </body>
 </html>
